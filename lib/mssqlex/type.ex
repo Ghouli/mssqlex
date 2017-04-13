@@ -92,6 +92,17 @@ defmodule Mssqlex.Type do
     end
   end
 
+  def encode(value, _) when is_map(value) do
+    with utf16 when is_bitstring(utf16) <-
+      :unicode.characters_to_binary(Poison.encode!(value), :unicode, {:utf16, :little})
+    do
+      {{:sql_wvarchar, byte_size(value)}, [utf16]}
+    else
+      _ -> raise %Mssqlex.Error{
+        message: "failed to convert string to UTF16LE"}
+    end
+  end
+
   def encode(nil, _) do
     {:sql_integer, [:null]}
   end
