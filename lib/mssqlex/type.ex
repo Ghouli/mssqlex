@@ -93,14 +93,16 @@ defmodule Mssqlex.Type do
   end
 
   def encode(value, _) when is_map(value) do
+    encoded = Poison.encode!(value)
     with utf16 when is_bitstring(utf16) <-
-      :unicode.characters_to_binary(Poison.encode!(value), :unicode, {:utf16, :little})
+      :unicode.characters_to_binary(encoded, :unicode, {:utf16, :little})
     do
-      {{:sql_wvarchar, byte_size(value)}, [utf16]}
+      {{:sql_wvarchar, byte_size(encoded)}, [utf16]}
     else
       _ -> raise %Mssqlex.Error{
-        message: "failed to convert string to UTF16LE"}
+        message: "failed to convert map to UTF16LE"}
     end
+
   end
 
   def encode(nil, _) do
